@@ -1,53 +1,55 @@
-import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormBuilder, Validators } from '@angular/forms';
-import { TravelAwayService } from '../../services/travel-away.service';
-import { Router } from '@angular/router';
+<app-employeelayout>
+</app-employeelayout>
+<div style="background-color:cornsilk" class="container">
+  <h1 style="text-align:center">Add Vehicle</h1>
+  <div style="text-align:center;margin-left:20em">
+    &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; *All fileds are manadatory
+  </div>
 
-@Component({
-  selector: 'app-addvehicle',
-  templateUrl: './addvehicle.component.html',
-  styleUrls: ['./addvehicle.component.css']
-})
-export class AddvehicleComponent implements OnInit {
-  VehicleForm: FormGroup
-  status: boolean;
-  errorAddMsg: string;
-  showDiv: boolean = false;
-  msg: string;
-  constructor(private _formBuilder: FormBuilder, private service: TravelAwayService, private _router: Router) { }
-
-  ngOnInit(): void {
-    var vnamePattern: string = "^[A-Za-z]*$";
-    var rate = "^[1-9][0-9]*$";
-    this.VehicleForm = this._formBuilder.group({
-      VehicleName: ['', [Validators.required, Validators.pattern(vnamePattern)]],
-      VehicleType: [''],
-      RatePerHour: ['', [Validators.required, Validators.pattern(rate)]],
-      RatePerKm: ['', [Validators.required, Validators.pattern(rate)]],
-    }
-    )
-  }
-
-  SubmitForm(form: FormGroup) {
-    this.service.addVehicle(this.VehicleForm.value.VehicleName,
-      this.VehicleForm.value.VehicleType, this.VehicleForm.value.RatePerHour, this.VehicleForm.value.RatePerKm).subscribe(
-        resSuccess => {
-          this.status = resSuccess;
-          if (resSuccess) {
-            alert('Vehicle added Successfully');
-            this._router.navigate(['/viewVehicle'])
-          }
-          else {
-            alert('Vehicle details could not be added')
-          }
-        },
-
-        err => {
-          this.errorAddMsg = err;
-          alert( 'Sorry....Some error occurred,please try again');
-        },
-        () => console.log('Add Vehicle completed')
-      )
-  }
-
-}
+  <div class="row">
+    <div class="col-md-4">
+    </div>
+    <div class="col-md-4">
+      <form [formGroup]="VehicleForm" (ngSubmit)="SubmitForm(VehicleForm)">
+        <div class="form-group">
+          <label>Vehicle Name</label>
+          <input type="text" class="form-control" placeholder="Enter the Vehicle name" formControlName="VehicleName">
+          <p *ngIf="VehicleForm.controls.VehicleName.errors?.required &&  VehicleForm.controls.VehicleName.touched"
+             style="color:red" class="alert alert-danger">&nbsp;This field is required!</p>
+          <p *ngIf="VehicleForm.controls.VehicleName.errors?.pattern && VehicleForm.controls.VehicleName.touched "
+             style="color:red" class="alert alert-danger">Only Alphabets are allowed!</p>
+        </div>
+        <div class="form-group">
+          <label>Vehicle Type</label>
+          <select class="form-control" placeholder="--Vehicle Type--" formControlName="VehicleType">
+            <option value="Two-Wheeler">Two-Wheeler</option>
+            <option value="Four-Wheeler">Four-Wheeler</option>
+            <option value="Mini-Bus">Mini-Bus</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Rate Per Hour</label>
+          <input type="number" class="form-control" placeholder="Enter the rate per hour" formControlName="RatePerHour">
+          <p *ngIf="VehicleForm.controls.RatePerHour.errors?.required &&  VehicleForm.controls.RatePerHour.touched"
+             class="alert alert-danger" style="color:red">This field is required!</p>
+          <p *ngIf="VehicleForm.controls.RatePerHour.errors?.pattern  && VehicleForm.controls.RatePerHour.touched"
+             style="color:red" class="alert alert-danger">only numbers are allowed!</p>
+        </div>
+        <div class="form-group">
+          <label>Rate Per Km</label>
+          <input type="number" class="form-control" placeholder="Enter the rate per Kilo-meter" formControlName="RatePerKm">
+          <p *ngIf="VehicleForm.controls.RatePerKm.errors?.required &&  VehicleForm.controls.RatePerKm.touched"
+             class="alert alert-danger" style="color:red">This field is required!</p>
+          <p *ngIf="VehicleForm.controls.RatePerKm.errors?.pattern && VehicleForm.controls.RatePerKm.touched"
+             style="color:red" class="alert alert-danger">only numbers are allowed!</p>
+        </div>
+        <button type="submit" style="color:green">Add Details</button>&nbsp;&nbsp;&nbsp;&nbsp;
+        <a routerLink="/viewVehicle">Cancel</a>
+        <br />
+      </form>
+    </div>
+    <div class="col-md-4">
+    </div>
+    <br />
+  </div>
+</div>
