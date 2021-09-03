@@ -1,51 +1,52 @@
-<app-customer-layout></app-customer-layout>
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <title>Vehicle Available</title>
-</head>
-<body>
-  <h2 align="center">
-    Vehicles Available
-  </h2>
-  <!-- <div *ngIf="(vehicleObj?.length > 0)">-->
-  <div>
-    <div class="table-responsive">
+import { Component, OnInit } from '@angular/core';
+import { IViewVehicle } from '../travelAway-interfaces/viewVehicle';
+import { ActivatedRoute, Router } from '@angular/router';
+import { UserService } from '../travelAway-services/user-service/user.service';
 
-      <table align="center" class="table" style="border:2px solid rgba(220,230,242,1);">
-        <tr style="background-color:rgba(220,230,242,1); font-size:12pt; text-align:center;">
-          <th>Vehicle Id</th>
-          <th>Vehicle Name</th>
-          <th>Vehicle type</th>
-          <th>Rate Per Hour</th>
-          <th>Rate Per Km</th>
-          <th>Base Price</th>
-          <th style="text-align:center">Action</th>
-        </tr>
+@Component({
+  selector: 'app-view-vehicles',
+  templateUrl: './view-vehicles.component.html',
+  styleUrls: ['./view-vehicles.component.css']
+})
 
 
-        <tr *ngFor="let item of vehicleObj" id="service-schedule-details-id" style="background-color:white;text-align:center;">
-          <td>{{item.vehicleId}}</td>
-          <td>{{item.vehicleName}}</td>
-          <td>{{item.vehicleType}}</td>
-          <td>{{item.ratePerHour}}</td>
-          <td>{{item.ratePerKm}}</td>
-          <td>{{item.basePrice}}</td>
-          <td>
-            <button id="update-schedule-btn-id"
-                    (click)="RentVehicle(item)"
-                    class="btn" style="background-color:lightblue;">
-              Book
-            </button>
-          </td>
-        </tr>
-      </table>
-    </div>
-    <div *ngIf="(vehicleObj?.length < 0)" style="">
-      <h4 class="jumbotron" style="text-align:center;">No Vehicles is available for schedule</h4>
-    </div>
-  </div>
+export class ViewVehiclesComponent implements OnInit {
+  constructor(private _UserService: UserService,
+    private router: Router, private route: ActivatedRoute) { }
+  emailId: string;
+  showMsgDiv: boolean = false;
+  errMsg: string;
 
+  vehicleObj: IViewVehicle[];
 
-</body>
-</html>
+  ngOnInit(): void {
+    this.emailId = sessionStorage.getItem('emailId');
+    this.ViewVehicleDetails();
+
+  }
+  ViewVehicleDetails() {
+    this._UserService.ViewVehicleDetails().subscribe(
+      x => {
+        this.vehicleObj = x;
+        console.log(this.vehicleObj.length);
+        console.log(this.vehicleObj);
+        if (this.vehicleObj == null) {
+          this.showMsgDiv = true;
+        }
+        //console.log(this.showMsgDiv);
+      },
+      y => {
+        this.errMsg = y;
+        console.log(this.errMsg);
+      },
+      () => { console.log("ViewVehicleDetails method called successfully"); }
+    )
+  }
+
+  RentVehicle(vehicle: IViewVehicle) {
+    this.router.navigate(['/rentVehicle',
+      vehicle.vehicleId, vehicle.ratePerHour, vehicle.ratePerKm,
+      vehicle.vehicleName, vehicle.vehicleType]);
+  }
+}
+
