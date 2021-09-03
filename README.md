@@ -1,32 +1,45 @@
-<app-customer-layout></app-customer-layout>
-<div class="myContent">
-  <h4>You have booked the following packages</h4>
-  <br />
-  <div class="table-responsive">
-    <table class="table" style="border:2px solid rgba(220,230,242,1);" *ngIf="bookings && bookings.length">
-      <tr style="background-color:rgba(220,230,242,1); font-size:12pt">
-        <th>Booking ID</th>
-        <th>Package ID</th>
-        <th>Contact Number</th>
-        <th>Address</th>
-        <th>Date Of Travel</th>
-        <th>Number of Adults</th>
-        <th>Number of Children</th>
-        <th>Rating</th>
-      </tr>
-      <tr *ngFor="let book of bookings" style="background-color:white">
-        <td>{{book.bookingId}}</td>
-        <td>{{book.packageId}}</td>
-        <td>{{book.contactNumber}}</td>
-        <td>{{book.address}}</td>
-        <td>{{book.dateOfTravel | date:'shortDate'}}</td>
-        <td>{{book.numberOfAdults}}</td>
-        <td>{{book.numberOfChildren}}</td>
-        <td><button title="Rate Booking" (click)="addRating(book)" class="btn btn-primary">Rate Booking</button></td>
-      </tr>
-    </table>
-    <div *ngIf="showError" style="">
-      <h4 class="jumbotron" style="text-align:center;">{{errorMsg}}</h4>
-    </div>
-  </div>
-</div>
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { IViewHotel } from '../travelAway-interfaces/viewHotel';
+import { UserService } from '../travelAway-services/user-service/user.service';
+
+@Component({
+  selector: 'app-view-hotels',
+  templateUrl: './view-hotels.component.html',
+  styleUrls: ['./view-hotels.component.css']
+})
+export class ViewHotelsComponent implements OnInit {
+
+  constructor(private _UserService: UserService,
+    private router: Router, private route: ActivatedRoute) { }
+  emailId: string;
+  showMsgDiv: boolean = false;
+  errMsg: string;
+  hotelObj: IViewHotel[];
+  hotelId: number;
+
+  ngOnInit(): void {
+    this.emailId = sessionStorage.getItem('emailId');
+
+    this.ViewHotelDetails();
+  }
+
+  ViewHotelDetails() {
+    this._UserService.ViewHotelDetails().subscribe(
+      x => {
+        this.hotelObj = x;
+
+        console.log(this.hotelObj);
+        if (this.hotelObj == null) {
+          this.showMsgDiv = true;
+        }
+      },
+      y => {
+        this.errMsg = y;
+        console.log(this.errMsg);
+      },
+      () => { console.log("ViewHotelDetails method called successfully"); }
+    )
+  }
+
+}
