@@ -1,90 +1,52 @@
 import { Component, OnInit } from '@angular/core';
-import { NgForm } from '@angular/forms';
-import { IVehicleBooked } from '../travelAway-interfaces/rentVehicle';
-import { Router, ActivatedRoute } from '@angular/router';
 import { UserService } from '../travelAway-services/user-service/user.service';
-
+import { IBookings } from '../travelAway-interfaces/bookings';
+import { Router } from '@angular/router';
+import { IRating } from '../travelAway-interfaces/rating';
 @Component({
-  selector: 'app-rent-vehicle',
-  templateUrl: './rent-vehicle.component.html',
-  styleUrls: ['./rent-vehicle.component.css']
+  selector: 'app-view-bookings',
+  templateUrl: './view-bookings.component.html',
+  styleUrls: ['./view-bookings.component.css']
 })
-
-
-export class RentVehicleComponent implements OnInit {
-  constructor(private _UserService: UserService,
-    private router: Router, private route: ActivatedRoute) { }
+export class ViewBookingsComponent implements OnInit {
+  errorMsg: string;
   emailId: string;
-  showMsgDiv: boolean = false;
-  errMsg: string;
-  vehicleId: number;
-  vehicleName: string;
-  vehicleType: string;
-  ratePerHour: number;
-  ratePerKm: number;
-  noOfHours: number;
-  noOfKm: number;
-  base: number;
-  cost: number;
-  r: IVehicleBooked
+  bookings: IBookings[];
+  showError: boolean = false;
+  status: boolean = false;
+  imageSrc: string;
+  constructor(private _userService: UserService, private router: Router) { }
 
-  vehicleBookingId: number;
   ngOnInit(): void {
-    this.emailId = sessionStorage.getItem('emailId');
-    this.vehicleId = parseInt(this.route.snapshot.params['vehicleId']);
-    console.log(this.vehicleId);
-    this.vehicleName = this.route.snapshot.params['vehicleName'];
-    console.log(this.vehicleName);
-    this.ratePerHour = parseInt(this.route.snapshot.params['ratePerHour']);
-    console.log(this.ratePerHour);
-    this.ratePerKm = parseInt(this.route.snapshot.params['ratePerKm']);
-    console.log(this.ratePerKm);
-    this.vehicleType = this.route.snapshot.params['vehicleType'];
-    console.log(this.vehicleType);
-    if (this.vehicleType == "Mini-Bus") {
-      this.base = 350;
-
+    this.emailId = sessionStorage.getItem('userName');
+    if (this.emailId == null) {
+      this.router.navigate(['/login']);
     }
-    if (this.vehicleType == "Two-Wheeler") {
-      this.base = 100;
-    }
-    if (this.vehicleType == "Four-Wheeler") {
-      this.base = 200;
-    }
-  }
-  RentVehicle(form: NgForm) {
-    this.cost = ((this.noOfHours * this.ratePerHour) *
-      (this.noOfKm * this.ratePerKm)) + this.base;
-    this.r = {
-      VehicleId: this.vehicleId,
-      VehicleName: this.vehicleName,
-      BookingDate: form.value.bod,
-      PickupTime: form.value.time,
-      NoOfHours: this.noOfHours,
-      NoOfKms: this.noOfKm,
-      TotalCost: this.cost,
-      VehicleStatus:"Booked"
-    }
-    console.log(this.r);
-
-    this._UserService.RentVehicle(this.r).subscribe(
-      x => {
-        this.vehicleBookingId = x;
-        if (this.vehicleBookingId <= 0) {
-          this.showMsgDiv = true;
-
-
-        }
-        alert("Vehicle has been booked: " + this.vehicleBookingId);
-        this.router.navigate(['/home']);
-      },
-      y => {
-        this.errMsg = y;
-        console.log(this.errMsg);
-      },
-      () => { console.log("rent Vehicle Method called successfully"); }
-    )
+    this._userService.getAllBookings(this.emailId)
+      .subscribe(
+        resBookingData => {
+          this.bookings = resBookingData;
+          if (this.bookings.length == 0) {
+            this.showError = true;
+            this.errorMsg = "Your Booking Details is empty.";
+          }
+        },
+        resBookingError => {
+          this.bookings = null;
+          this.errorMsg = resBookingError;
+          console.log(this.errorMsg);
+          if (this.bookings.length == 0) {
+            this.showError = true;
+            this.errorMsg = "No records found.";
+          }
+        },
+        () => console.log("GetBookings method executed successfully")
+      );
+    //this.imageSrc = "assets/delete-item.jpg";
 
   }
 
+  addRating(booking: IRating) {
+    this.router.navigate(['/addRating', booking.bookingId])
+  }
 }
