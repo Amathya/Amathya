@@ -1,112 +1,82 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IPayment } from '../travelAway-interfaces/payment';
 import { UserService } from '../travelAway-services/user-service/user.service';
-
-
+import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 @Component({
-  selector: 'app-payments',
-  templateUrl: './payments.component.html',
-  styleUrls: ['./payments.component.css']
+  selector: 'app-book-rating',
+  templateUrl: './book-rating.component.html',
+  styleUrls: ['./book-rating.component.css']
 })
-export class PaymentsComponent implements OnInit {
-
-  userRole: string;
-  userName: string;
-  msg: string;
+export class BookRatingComponent implements OnInit {
   bookingId: number;
-  totalCost: number;
-  responsePay: number;
-  payStatus: string;
-  estimatedCost: number;
-  payConfirmation: boolean;
+  rating1: number;
+  comments: string;
+  status: boolean;
   errorMsg: string;
-
-  constructor(private route: ActivatedRoute, private _UserService: UserService, private router: Router) { }
+  userName: string;
+  ratingForm: FormGroup;
+  constructor(private route: ActivatedRoute, private _userService: UserService, private router: Router, private formBuilder: FormBuilder) { }
 
   ngOnInit(): void {
-    this.getPaymentAmount();
-    this.userRole = sessionStorage.getItem('userRole')
-    this.userName = sessionStorage.getItem('userName')
+    this.userName = sessionStorage.getItem("userName");
+    if (this.userName == null) {
+      this.router.navigate(['/login']);
+    }
     this.bookingId = parseInt(this.route.snapshot.params['bookingId']);
-    this.estimatedCost = parseInt(this.route.snapshot.params['estimatedCost']);
-    //this.totalCost = parseInt(this.route.snapshot.params['totalCost']);
-    console.log(this.bookingId, this.estimatedCost);
-
-
-
+    this.ratingForm = this.formBuilder.group(
+      {
+        rating1: ['', Validators.required],
+        comments: ['', [Validators.required, Validators.pattern('[a-zA-Z][a-zA-Z ]+')]]
+      });
   }
-  submitPaymentForm(paymentForm) {
 
-    this.getPaymentAmount();
-
-    this.bookingId = parseInt(this.route.snapshot.params['bookingId']);
-    //this.totalCost = this.route.snapshot.params['totalCost'];
-    this.payStatus = "confirmed";
-
-    let pay: IPayment;
-    pay = { paymentId: 0, bookingId: this.bookingId, totalAmount: this.totalCost, paymentStatus: "Confirmed" }
-
-    this._UserService.PaymentStatusService(pay).subscribe(
-
-      resposnePayConfirmation => {
-        this.payConfirmation = resposnePayConfirmation;
-        if (this.payConfirmation) {
-          console.log(this.totalCost)
-          console.log(this.estimatedCost)
-          //console.log(responsePayment)
-          if (confirm("Payment Successfull")) {
+  bookratings(form: FormGroup) {
+    if (this.ratingForm.valid) {
+      this._userService.addRating(form.value.rating1, form.value.comments, this.bookingId).subscribe(
+        responseRatingStatus => {
+          this.status = responseRatingStatus;
+          if (this.status) {
+            alert("Rating done successfully");
+            console.log(form.value.rating1, form.value.comments, this.bookingId);
             this.router.navigate(['/home']);
           }
-
           else {
-            alert("Please Try Again");
+            alert("Some error occured, please try after some time.");
+            this.router.navigate(['/home']);
           }
-
-        }
-
-      },
-
-      responsePayErrorConfirmation => {
-        this.payConfirmation = null;
-        this.errorMsg = responsePayErrorConfirmation
-        console.log("Unable to Complete Payment", this.errorMsg)
-
-      },
-
-      () => ("Payment Method Executed")
-
-    )
-
+        },
+        responsRatingeError => {
+          this.errorMsg = responsRatingeError;
+          console.log(this.errorMsg);
+          alert("Some error occured, please try after some time.");
+          this.router.navigate(['/home']);
+        },
+        () => console.log("Rating method executed successfully.")
+      );
+    }
   }
-  getPaymentAmount() {
-    //console.log(this.estimatedCost)
-
-    this.bookingId = parseInt(this.route.snapshot.params['bookingId']);
-
-    this._UserService.TotalPayment(this.bookingId).subscribe(
-
-      responsePayment => {
-        this.responsePay = responsePayment
-        this.totalCost = this.responsePay + this.estimatedCost;
-        //console.log(this.totalCost)
-        //console.log(this.estimatedCost)
-        //console.log(responsePayment)
-        console.log("here")
-      },
-      responseError => {
-        this.totalCost = 0;
-        console.log("error recieving info")
-      },
-      () => ("Payment Method Executed")
-
-    )
-  }
-
-  CancelRequest() {
-    console.log("Cancel button clicked");
-    alert("Accomodation Cancelled !\n Redirecting ...");
-    this.router.navigate(['/packages'])
-  }
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
