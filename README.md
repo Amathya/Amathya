@@ -1,79 +1,108 @@
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UserService } from '../travelAway-services/user-service/user.service';
+import { IAddVehicle } from '../travelAway-interfaces/addVehicle';
 
-<div *ngIf="commonLayout">
-  <app-common-layout></app-common-layout>
-</div>
-<div *ngIf="customerLayout">
-  <app-customer-layout></app-customer-layout>
-</div>
-<div *ngIf="employeeLayout">
-  <app-employee-layout></app-employee-layout>
-</div>
-  <div class="myContent">
-    <div class="specs">
-      <div class="img-bg">
-        <img src="assets/bus.jpg" />
-        <form [formGroup]="vehiclePackage" (ngSubmit)="SubmitForm(vehiclePackage)">
-          <!--(ngSubmit)="submitLoginForm(loginForm)"--> <!--style="height:400px;"-->
-          <!--<div class="row">-->
-          <div class="text" style="width:25%;margin-left:250px;background-color:whitesmoke;padding-bottom:20px;border-radius:20px">
-            <div class="col-xs-7" style="padding:10px;">
-              <h2 style="text-align:center;font-family:'Sitka Banner';color:black;font-size:40px;"><b>Add Vehicle</b></h2>
-              <h6 style="text-align:right;font-size:small;color:black">
-                All fields are mandatory!
-              </h6>
-              <div class="form-group" style="text-align:left">
-                <span class="label">Vehicle Name</span>
+@Component({
+  selector: 'app-add-vehicle',
+  templateUrl: './add-vehicle.component.html',
+  styleUrls: ['./add-vehicle.component.css']
+})
+export class AddVehicleComponent implements OnInit {
 
-                <input type="text" class="form-control" formControlName="vehicleName" placeholder="Enter the Vehicle Name" style="border:2px ridge darkred">
-                <p *ngIf="vehiclePackage.controls.vehicleName.errors?.required &&  vehiclePackage.controls.vehicleName.touched" class="alert alert-danger">This field is required!</p>
-               
-              </div>
+  vehiclePackage: FormGroup;
+  vehicle: IAddVehicle;
+  msg: string;
+  status: number;
+  errMsg: string;
+  userRole: string;
+  userName: string;
+  VehicleId: number;
+  BasePrice: number;
+  bookingStatus: string;
+  customerLayout: boolean = false;
+  commonLayout: boolean = false;
+  employeeLayout: boolean = false;
+  constructor(private route: ActivatedRoute,
+    private formBuilder: FormBuilder,
+    private _UserService:UserService,
+    private router: Router)
+  {
+    this.userRole = sessionStorage.getItem('userRole');
+    if (this.userRole == "Customer") {
+      this.customerLayout = true;
+    }
+    else if (this.userRole == "Employee") {
+      this.employeeLayout = true;
+    }
+    else {
+      this.commonLayout = true;
+    }
+  }
 
-              <div class="form-group" style="text-align:left">
-                <span class="label">Vehicle Type</span>
+  ngOnInit() {
 
+    this.BasePrice = 450.00;
+    this.vehiclePackage = this.formBuilder.group({
+      vehicleName: ['', [Validators.required, Validators.pattern("^[a-zA-Z]+$")]],
+      vehicleType: ['', [Validators.required]],
+      rateperhr: ['', [Validators.required, , Validators.min(10)]],
+      rateperkm: ['', [Validators.required, , Validators.min(10)]],
+    });
 
-                <select class="form-control" id="VehicleType" formControlName="vehicleType" style="border:2px ridge darkred" required>
-                  <option value="" selected disabled>---Vehicle Type ---</option>
-                  <option value="two-wheeler" id="two-wheeler">Two-wheeler</option>
-                  <option value="Two-wheeler" id="four-wheeler">Four-wheeler</option>
-                  <option value="miniBus" id="miniBus">Mini Bus</option>
-                </select>
+    this.userRole = sessionStorage.getItem('userRole');
+    this.userName = sessionStorage.getItem('userName')
 
-              </div>
+  }
+  SubmitForm(form: FormGroup) {
 
-              <div class="form-group" style="text-align:left;padding-bottom:10px">
-                <span class="label"> Rate Per Hour</span>
+    this.bookingStatus = "Added"
 
-                <input type="number" class="form-control" formControlName="rateperhr" placeholder="Enter Rate Per Hour" style="border:2px ridge darkred" min="10" max="1000">
-                <p *ngIf="vehiclePackage.controls.rateperhr.errors?.required &&  vehiclePackage.controls.rateperhr.touched" class="alert alert-danger">This field is required!</p>
-                <p *ngIf="vehiclePackage.controls.rateperhr.errors?.min &&  vehiclePackage.controls.rateperhr.touched" class="alert alert-danger">rate should be greater than zero </p>
+    console.log(form.value.vehicleName,
+      form.value.vehicleType,
+      form.value.rateperhr, form.value.rateperkm
+      , this.BasePrice)
+    //this.book = {bookingId: 0, contactNumber: this.mobile, address: form.value.address, dateOfTravel: form.value.dateOftravel, numberOfAdults: form.value.adults, numberOfChildren: form.value.children,
+    //  status: this.bookingStatus, emailId: this.userName, packageId: this.packageId
+    //}
 
-              </div>
-              <div class="form-group" style="text-align:left">
-                <span class="label">Rate Per Km</span>
+    this._UserService.addvehicles(
+      form.value.vehicleName,
+      form.value.vehicleType,
+      form.value.rateperhr, form.value.rateperkm
+      , this.BasePrice
+    ).subscribe(
 
-                <input type="number" class="form-control" formControlName="rateperkm" placeholder="Enter Rate Per Km" style="border:2px ridge darkred" min="10" max="1000">
-               <p *ngIf="vehiclePackage.controls.rateperkm.errors?.required &&  vehiclePackage.controls.rateperkm.touched" class="alert alert-danger">This field is required!</p>
-                <p *ngIf="vehiclePackage.controls.rateperkm.errors?.min &&  vehiclePackage.controls.rateperkm.touched" class="alert alert-danger">rate should be greater than zero </p>
+      responseSuccess => {
+        this.status = responseSuccess
+        console.log(responseSuccess)
+        if (this.status > 0) {
+          if (confirm("add vehicle done successfully ")) {
+            //  this.bookAccomodation(this.book)
+            this.router.navigate(['/home', this.status])
+          }
 
-              </div>
+          else
+            this.router.navigate(['/home', this.status])
+        }
+        else {
+          alert("Could Not Book.");
+        }
+      },
+      responseError => {
+        this.errMsg = responseError
+        console.log(this.errMsg);
+        alert("Some error occured, please try after some time.");
+      },
+      () => console.log("SubmitForm method executed succesfully")
+    );
 
+  }
 
-              <div class="form-group" style="text-align:left;padding-left:120px">
-                <button type="submit" class="btn btn-block " [disabled]="!vehiclePackage.valid"><b>Add Details</b></button>
-                <!--<button routerLink="/" class="btn btn-warning btn-block">Cancel</button>-->
-              </div>
-            </div>
-            <div class="col-md-4">
-            </div>
-          </div>
+  //bookAccomodation(book: IBookings) {
+  //  this.router.navigate(['/accomodation', book.bookingId])
+  //}
+}
 
-
-
-        </form>
-
-      </div>
-    </div>
-  </div>
 
