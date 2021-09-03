@@ -1,52 +1,32 @@
-import { Component, OnInit } from '@angular/core';
-import { UserService } from '../travelAway-services/user-service/user.service';
-import { IBookings } from '../travelAway-interfaces/bookings';
-import { Router } from '@angular/router';
-import { IRating } from '../travelAway-interfaces/rating';
-@Component({
-  selector: 'app-view-bookings',
-  templateUrl: './view-bookings.component.html',
-  styleUrls: ['./view-bookings.component.css']
-})
-export class ViewBookingsComponent implements OnInit {
-  errorMsg: string;
-  emailId: string;
-  bookings: IBookings[];
-  showError: boolean = false;
-  status: boolean = false;
-  imageSrc: string;
-  constructor(private _userService: UserService, private router: Router) { }
-
-  ngOnInit(): void {
-    this.emailId = sessionStorage.getItem('userName');
-    if (this.emailId == null) {
-      this.router.navigate(['/login']);
-    }
-    this._userService.getAllBookings(this.emailId)
-      .subscribe(
-        resBookingData => {
-          this.bookings = resBookingData;
-          if (this.bookings.length == 0) {
-            this.showError = true;
-            this.errorMsg = "Your Booking Details is empty.";
-          }
-        },
-        resBookingError => {
-          this.bookings = null;
-          this.errorMsg = resBookingError;
-          console.log(this.errorMsg);
-          if (this.bookings.length == 0) {
-            this.showError = true;
-            this.errorMsg = "No records found.";
-          }
-        },
-        () => console.log("GetBookings method executed successfully")
-      );
-    //this.imageSrc = "assets/delete-item.jpg";
-
-  }
-
-  addRating(booking: IRating) {
-    this.router.navigate(['/addRating', booking.bookingId])
-  }
-}
+<app-customer-layout></app-customer-layout>
+<div class="myContent">
+  <h4>You have booked the following packages</h4>
+  <br />
+  <div class="table-responsive">
+    <table class="table" style="border:2px solid rgba(220,230,242,1);" *ngIf="bookings && bookings.length">
+      <tr style="background-color:rgba(220,230,242,1); font-size:12pt">
+        <th>Booking ID</th>
+        <th>Package ID</th>
+        <th>Contact Number</th>
+        <th>Address</th>
+        <th>Date Of Travel</th>
+        <th>Number of Adults</th>
+        <th>Number of Children</th>
+        <th>Rating</th>
+      </tr>
+      <tr *ngFor="let book of bookings" style="background-color:white">
+        <td>{{book.bookingId}}</td>
+        <td>{{book.packageId}}</td>
+        <td>{{book.contactNumber}}</td>
+        <td>{{book.address}}</td>
+        <td>{{book.dateOfTravel | date:'shortDate'}}</td>
+        <td>{{book.numberOfAdults}}</td>
+        <td>{{book.numberOfChildren}}</td>
+        <td><button title="Rate Booking" (click)="addRating(book)" class="btn btn-primary">Rate Booking</button></td>
+      </tr>
+    </table>
+    <div *ngIf="showError" style="">
+      <h4 class="jumbotron" style="text-align:center;">{{errorMsg}}</h4>
+    </div>
+  </div>
+</div>
